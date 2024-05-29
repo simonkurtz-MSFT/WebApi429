@@ -73,8 +73,9 @@ namespace WebApi429
             {
                 var response = new StringBuilder();
                 response.Append("<html><head><title>WebApi429</title></head><body><h2>WebApi429 Parameters & Endpoints</h2><p>");
-                response.Append($"A total of <b>{parameters.MaxRequests}</b> requests can be issued against each of the <b>{parameters.MaxEndpoints}</b> endpoints over a time interval of <b>{parameters.ResetCounterAfterSeconds}</b> seconds. ");
-                response.Append($"Beyond that an HTTP 429 will be returned with a <code>Retry-After</code> header value of <b>{parameters.RetryAfterSeconds}</b> seconds.<ul>");
+                response.Append($"A total of <b>{parameters.MaxRequests}</b> requests can be issued against each of the <b>{parameters.MaxEndpoints}</b> endpoints. ");
+                response.Append($"Beyond that an HTTP 429 will be returned with a <code>Retry-After</code> header value of <b>{parameters.RetryAfterSeconds}</b> seconds. ");
+                response.Append($"The counters are reset after a period of inactivity of <b>{parameters.ResetCounterAfterSeconds}</b> seconds.<ul>");
                 for (int i = 0; i < parameters.MaxEndpoints; i++)
                 {
                     response.Append($"<li><a href=\"/api/{i}\" target=\"_blank\">/api/{i}</a></li>");
