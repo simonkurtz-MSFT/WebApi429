@@ -4,13 +4,6 @@ namespace WebApi429
 {
     public class Program
     {
-        public class Api429
-        {
-            public int Count { get; set; } = 0;
-            public DateTime Reset429 { get; set; } = DateTime.UtcNow;
-            public DateTime LastRequest { get; set; } = DateTime.UtcNow;
-        }
-
         /// <summary>
         /// Generates API endpoints that return 429 status codes when the maximum number of requests is exceeded. The 429 logic is simplified through a counter and irrespective of requests over time.
         /// If the counter is at the maximum, the endpoint will return a 429 status code and reset the counter after a specified time.
