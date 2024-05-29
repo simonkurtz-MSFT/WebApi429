@@ -17,7 +17,7 @@ namespace WebApi429
 
             for (int i = 0; i < parameters.MaxEndpoints; i++)
             {
-                Tracker.Add(new Api429());
+                Tracker.Add(new Api429(i));
             }
 
             #region Endpoints
@@ -53,7 +53,7 @@ namespace WebApi429
                         {
                             Tracker[i].Count++;
                             Tracker[i].LastRequest = DateTime.UtcNow;
-                            return Results.Ok(i.ToString());
+                            return Results.Ok(Tracker[i]);
                         }
                         else // If the counter is at the maximum, return a 429.
                         {
