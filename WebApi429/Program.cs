@@ -34,34 +34,33 @@ namespace WebApi429
                     return Results.NotFound();
                 }
                 else
-                {   // Ensure that the existing endpoint can accept requests.
-                    if (Tracker[i].Reset429 > DateTime.UtcNow)
+                {   
+                    var tracker = Tracker[i];
+
+                    // Ensure that the existing endpoint can accept requests.
+                    if (tracker.Reset429 > DateTime.UtcNow)
                     {
-                        context.Response.Headers.Append("Retry-After", Math.Ceiling((Tracker[i].Reset429 - DateTime.UtcNow).TotalSeconds).ToString());
-                        return Results.StatusCode(429);
+                        return Http429(context, (int)Math.Ceiling((tracker.Reset429 - DateTime.UtcNow).TotalSeconds));
                     }
                     else
                     {
-                        // If the last request was more than a minute ago, reset the counter. This ensures a fresh start for the counter after a period of inactivity.
-                        if (Tracker[i].LastRequest.AddSeconds(parameters.ResetCounterAfterSeconds) < DateTime.UtcNow)
+                        // If the last request was more than the value in RetryAfterSeconds ago, reset the counter. This ensures a fresh start for the counter after a period of inactivity.
+                        if (tracker.LastRequest.AddSeconds(parameters.RetryAfterSeconds) < DateTime.UtcNow)
                         {
-                            Tracker[i].Count = 0;
+                            tracker.Reset();
                         }
 
                         // Increment the counter for the successful request.
-                        if (Tracker[i].Count < parameters.MaxRequests)
+                        if (tracker.Count < parameters.MaxRequests)
                         {
-                            Tracker[i].Count++;
-                            Tracker[i].LastRequest = DateTime.UtcNow;
-                            return Results.Ok(Tracker[i]);
+                            tracker.Add();
+
+                            return Results.Ok(tracker);
                         }
                         else // If the counter is at the maximum, return a 429.
                         {
-                            Tracker[i].Count = 0;
-                            Tracker[i].Reset429 = DateTime.UtcNow.AddSeconds(parameters.RetryAfterSeconds);
-
-                            context.Response.Headers.Append("Retry-After", parameters.RetryAfterSeconds.ToString());
-                            return Results.StatusCode(429);
+                            tracker.Set429(parameters.RetryAfterSeconds);
+                            return Http429(context, parameters.RetryAfterSeconds);
                         }
                     }
                 }
@@ -74,8 +73,7 @@ namespace WebApi429
                 var response = new StringBuilder();
                 response.Append("<html><head><title>WebApi429</title></head><body><h2>WebApi429 Parameters & Endpoints</h2><p>");
                 response.Append($"A total of <b>{parameters.MaxRequests}</b> requests can be issued against each of the <b>{parameters.MaxEndpoints}</b> endpoints. ");
-                response.Append($"Beyond that an HTTP 429 will be returned with a <code>Retry-After</code> header value of <b>{parameters.RetryAfterSeconds}</b> seconds. ");
-                response.Append($"The counters are reset after a period of inactivity of <b>{parameters.ResetCounterAfterSeconds}</b> seconds.<ul>");
+                response.Append($"Beyond that an HTTP 429 will be returned with a <code>Retry-After</code> header value of <b>{parameters.RetryAfterSeconds}</b> seconds.</p><ul> ");                
                 for (int i = 0; i < parameters.MaxEndpoints; i++)
                 {
                     response.Append($"<li><a href=\"/api/{i}\" target=\"_blank\">/api/{i}</a></li>");
@@ -94,6 +92,12 @@ namespace WebApi429
             });
 
             app.Run();
+        }
+
+        private static IResult Http429(HttpContext context, int retryAfterSeconds)
+        {
+            context.Response.Headers.Append("Retry-After", retryAfterSeconds.ToString());
+            return Results.StatusCode(429);
         }
     }
 }

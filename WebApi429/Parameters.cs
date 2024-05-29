@@ -19,10 +19,5 @@
         /// Gets or sets the number of seconds to wait before retrying after a 429 status.
         /// </summary>
         public int RetryAfterSeconds { get; set; }
-
-        /// <summary>
-        /// Gets or sets the number of seconds to wait before resetting the counter.
-        /// </summary>
-        public int ResetCounterAfterSeconds { get; set; }
     }
 }
