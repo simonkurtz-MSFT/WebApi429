@@ -1,0 +1,8 @@
+bin
+obj
+PublishProfiles
+ServiceDependencies
+.vs
+
+*.user
+*.vsidx
