@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace WebApi429
 {
     public class Program
@@ -17,7 +19,7 @@ namespace WebApi429
         {
             var builder = WebApplication.CreateBuilder(args);
             var app = builder.Build();
-            var parameters = builder.Configuration.GetSection("Parameters").Get<Parameters>() ?? throw new ArgumentNullException("Parameters", "Parameters are required.");
+            var parameters = builder.Configuration.GetSection("Parameters").Get<Parameters>() ?? throw new ArgumentNullException("Parameters", "Parameters are required."); // Assumes that if the Parameters section exist, so do the individual properties. No need to go overboard here.
             var Tracker = new List<Api429>(parameters.MaxEndpoints);
 
             for (int i = 0; i < parameters.MaxEndpoints; i++)
@@ -25,6 +27,7 @@ namespace WebApi429
                 Tracker.Add(new Api429());
             }
 
+            #region Endpoints
             app.MapGet("/api/{index}", (HttpContext context, string index) =>
             {
                 if (!Int32.TryParse(index, out int i))
@@ -70,10 +73,29 @@ namespace WebApi429
                     }
                 }
             });
+            #endregion
+
+            #region Start page
+            app.MapGet("/", (HttpContext context) =>
+            {
+                var response = new StringBuilder();
+                response.Append("<html><head><title>WebApi429</title></head><body><h2>WebApi429 Parameters & Endpoints</h2><p>");
+                response.Append($"A total of <b>{parameters.MaxRequests}</b> requests can be issued against each of the <b>{parameters.MaxEndpoints}</b> endpoints over a time interval of <b>{parameters.ResetCounterAfterSeconds}</b> seconds. ");
+                response.Append($"Beyond that an HTTP 429 will be returned with a <code>Retry-After</code> header value of <b>{parameters.RetryAfterSeconds}</b> seconds.<ul>");
+                for (int i = 0; i < parameters.MaxEndpoints; i++)
+                {
+                    response.Append($"<li><a href=\"/api/{i}\" target=\"_blank\">/api/{i}</a></li>");
+                }
+                response.Append("</ul></body></html>");
+
+                return Results.Content(response.ToString(), "text/html");
+            });
+            #endregion
+
 
             app.MapFallback(async (context) =>
             {
-                context.Response.Redirect("/api/0");
+                context.Response.Redirect("/");
                 await Task.CompletedTask;
             });
 
