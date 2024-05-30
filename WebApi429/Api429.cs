@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace WebApi429
 {
     /// <summary>
@@ -18,6 +20,7 @@ namespace WebApi429
         /// <summary>
         /// Gets or sets the time when the API's rate limit will be reset.
         /// </summary>
+        [JsonIgnore]
         public DateTime Reset429 { get; set; }
 
         /// <summary>
