@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Text;
 
 namespace WebApi429
@@ -13,14 +14,15 @@ namespace WebApi429
             var builder = WebApplication.CreateBuilder(args);
             var app = builder.Build();
             var parameters = builder.Configuration.GetSection("Parameters").Get<Parameters>() ?? throw new ArgumentNullException("Parameters", "Parameters are required."); // Assumes that if the Parameters section exist, so do the individual properties. No need to go overboard here.
+
+            #region Sinmilar Endpoints
             var Tracker = new List<Api429>(parameters.MaxEndpoints);
 
             for (int i = 0; i < parameters.MaxEndpoints; i++)
             {
                 Tracker.Add(new Api429(i));
             }
-
-            #region Endpoints
+                        
             app.MapGet("/api/{index}", (HttpContext context, string index) =>
             {
                 if (!Int32.TryParse(index, out int i))
@@ -67,18 +69,88 @@ namespace WebApi429
             });
             #endregion
 
+            #region Different Endpoints
+            var TrackerDifferent = new List<Api429Different>(parameters.MaxEndpoints);
+            var random = new Random();
+
+            for (int i = 0; i < parameters.MaxEndpoints; i++)
+            {
+                // maxRequests can be between 3 and 7, retryAfterSeconds is between 1 and 10.
+                TrackerDifferent.Add(new Api429Different(i, random.Next(3, 8), random.Next(1, 11)));
+            }
+
+            app.MapGet("/api2/{index}", (HttpContext context, string index) =>
+            {
+                if (!Int32.TryParse(index, out int i))
+                {
+                    return Results.NotFound();
+                }
+
+                // Ensure that the requested endpoint exists.
+                if (i < 0 || i >= parameters.MaxEndpoints)
+                {
+                    return Results.NotFound();
+                }
+                else
+                {
+                    var tracker = TrackerDifferent[i];
+
+                    // Ensure that the existing endpoint can accept requests.
+                    if (tracker.Reset429 > DateTime.UtcNow)
+                    {
+                        return Http429(context, (int)Math.Ceiling((tracker.Reset429 - DateTime.UtcNow).TotalSeconds));
+                    }
+                    else
+                    {
+                        // If the last request was more than the value in RetryAfterSeconds ago, reset the counter. This ensures a fresh start for the counter after a period of inactivity.
+                        if (tracker.LastRequest.AddSeconds(tracker.RetryAfterSeconds) < DateTime.UtcNow)
+                        {
+                            tracker.Reset();
+                        }
+
+                        // Increment the counter for the successful request.
+                        if (tracker.Count < tracker.MaxRequests)
+                        {
+                            tracker.Add();
+
+                            return Results.Ok(tracker);
+                        }
+                        else // If the counter is at the maximum, return a 429.
+                        {
+                            tracker.Set429(tracker.RetryAfterSeconds);
+                            return Http429(context, tracker.RetryAfterSeconds);
+                        }
+                    }
+                }
+            });
+            #endregion
+
             #region Start page
             app.MapGet("/", (HttpContext context) =>
             {
                 var response = new StringBuilder();
-                response.Append("<html><head><title>WebApi429</title></head><body><h2>WebApi429 Parameters & Endpoints</h2><p>");
-                response.Append($"A total of <b>{parameters.MaxRequests}</b> requests can be issued against each of the <b>{parameters.MaxEndpoints}</b> endpoints. ");
-                response.Append($"Beyond that an HTTP 429 will be returned with a <code>Retry-After</code> header value of <b>{parameters.RetryAfterSeconds}</b> seconds.</p><ul> ");                
+                response.Append("<html><head><title>WebApi429</title></head><body>");
+                response.Append("<h2>WebApi429 Parameters & Endpoints</h2>");
+                
+                response.Append("<h3>Same Endpoints</h3>");
+                response.Append($"<p>A total of <b>{parameters.MaxRequests}</b> requests can be issued against each of the <b>{parameters.MaxEndpoints}</b> endpoints. These endpoints all share the same max requests and retry-after value. Beyond that an HTTP 429 will be returned with a <code>Retry-After</code> header value of <b>{parameters.RetryAfterSeconds}</b> seconds.</p>");
+                response.Append("<ul>");
                 for (int i = 0; i < parameters.MaxEndpoints; i++)
                 {
                     response.Append($"<li><a href=\"/api/{i}\" target=\"_blank\">/api/{i}</a></li>");
                 }
-                response.Append("</ul></body></html>");
+                response.Append("</ul>");
+
+                response.Append("<h3>Different  Endpoints</h3>");
+                response.Append($"<p>A variable number of requests can be issued against each of the <b>{parameters.MaxEndpoints}</b> endpoints. These endpoints have different max requests and retry-after values. Beyond that an HTTP 429 will be returned with a <code>Retry-After</code> header value in seconds.</p>");
+                response.Append("<ul>");
+                for (int i = 0; i < parameters.MaxEndpoints; i++)
+                {
+                    response.Append($"<li><a href=\"/api2/{i}\" target=\"_blank\">/api2/{i}</a></li>");
+                }
+                response.Append("</ul>");
+
+                response.Append("</body></html>");
 
                 return Results.Content(response.ToString(), "text/html");
             });

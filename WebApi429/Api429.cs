@@ -10,11 +10,13 @@ namespace WebApi429
         /// <summary>
         /// Gets or sets the index of the API.
         /// </summary>
+        [JsonPropertyOrder(0)]
         public int Index { get; set; }
 
         /// <summary>
         /// Gets or sets the count of requests made to the API.
         /// </summary>
+        [JsonPropertyOrder(1)]
         public int Count { get; set; }
 
         /// <summary>
@@ -26,6 +28,7 @@ namespace WebApi429
         /// <summary>
         /// Gets or sets the time of the last request made to the API.
         /// </summary>
+        [JsonPropertyOrder(10)]
         public DateTime LastRequest { get; set; }
 
         /// <summary>
@@ -41,7 +44,7 @@ namespace WebApi429
         /// <summary>
         /// Adds a request to the API's rate limit.
         /// </summary>
-        public void Add()
+        public virtual void Add()
         {
             Count++;
             LastRequest = DateTime.UtcNow;
@@ -51,7 +54,7 @@ namespace WebApi429
         /// <summary>
         /// Resets the API's rate limit and the time of the last request.
         /// </summary>
-        public void Reset()
+        public virtual void Reset()
         {
             Count = 0;
             LastRequest = DateTime.MinValue;
@@ -62,7 +65,7 @@ namespace WebApi429
         /// Sets the HTTP 429 state.
         /// </summary>
         /// <param name="retryAfterSeconds"></param>
-        public void Set429(int retryAfterSeconds)
+        public virtual void Set429(int retryAfterSeconds)
         {
             Reset429 = DateTime.UtcNow.AddSeconds(retryAfterSeconds);
         }
