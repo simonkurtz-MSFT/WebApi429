@@ -28,7 +28,8 @@ namespace WebApi429
         /// <summary>
         /// Gets or sets the time of the last request made to the API.
         /// </summary>
-        [JsonPropertyOrder(10)]
+        //[JsonPropertyOrder(10)]
+        [JsonIgnore]
         public DateTime LastRequest { get; set; }
 
         /// <summary>
