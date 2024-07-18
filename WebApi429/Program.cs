@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using System.Text;
 
 namespace WebApi429
@@ -75,8 +74,8 @@ namespace WebApi429
 
             for (int i = 0; i < parameters.MaxEndpoints; i++)
             {
-                // maxRequests can be between 3 and 7, retryAfterSeconds is between 1 and 10.
-                TrackerDifferent.Add(new Api429Different(i, random.Next(3, 8), random.Next(1, 11)));
+                // maxRequests can be between 5 and 50, retryAfterSeconds is between 2 and 10.
+                TrackerDifferent.Add(new Api429Different(i, random.Next(5, 51), random.Next(2, 11)));
             }
 
             app.MapGet("/api2/{index}", (HttpContext context, string index) =>
@@ -125,6 +124,20 @@ namespace WebApi429
             });
             #endregion
 
+            #region 500 Error
+            app.MapGet("/api-500", (HttpContext context) =>
+            {
+                return Results.StatusCode(500);
+            });
+            #endregion
+
+            #region Dropped Connection
+            app.MapGet("/drop", (HttpContext context) =>
+            {
+                context.Abort();
+            });
+            #endregion
+
             #region Start page
             app.MapGet("/", (HttpContext context) =>
             {
@@ -132,6 +145,7 @@ namespace WebApi429
                 response.Append("<html><head><title>WebApi429</title></head><body>");
                 response.Append("<h2>WebApi429 Parameters & Endpoints</h2>");
                 
+                // Same Endpoints
                 response.Append("<h3>Same Endpoints</h3>");
                 response.Append($"<p>A total of <b>{parameters.MaxRequests}</b> requests can be issued against each of the <b>{parameters.MaxEndpoints}</b> endpoints. These endpoints all share the same max requests and retry-after value. Beyond that an HTTP 429 will be returned with a <code>Retry-After</code> header value of <b>{parameters.RetryAfterSeconds}</b> seconds.</p>");
                 response.Append("<ul>");
@@ -141,7 +155,8 @@ namespace WebApi429
                 }
                 response.Append("</ul>");
 
-                response.Append("<h3>Different  Endpoints</h3>");
+                // Different Endpoints
+                response.Append("<h3>Different Endpoints</h3>");
                 response.Append($"<p>A variable number of requests can be issued against each of the <b>{parameters.MaxEndpoints}</b> endpoints. These endpoints have different max requests and retry-after values. Beyond that an HTTP 429 will be returned with a <code>Retry-After</code> header value in seconds.</p>");
                 response.Append("<ul>");
                 for (int i = 0; i < parameters.MaxEndpoints; i++)
@@ -150,12 +165,23 @@ namespace WebApi429
                 }
                 response.Append("</ul>");
 
+                // 500 Error
+                response.Append("<h3>500 Endpoint</h3>");
+                response.Append("<ul>");
+                response.Append($"<li><a href=\"/api-500\" target=\"_blank\">/api-500</a></li>");
+                response.Append("</ul>");
+
+                // Dropped Connection                
+                response.Append("<h3>Dropped Connection Endpoint</h3>");
+                response.Append("<ul>");
+                response.Append($"<li><a href=\"/drop\" target=\"_blank\">/drop</a></li>");
+                response.Append("</ul>");
+
                 response.Append("</body></html>");
 
                 return Results.Content(response.ToString(), "text/html");
             });
             #endregion
-
 
             app.MapFallback(async (context) =>
             {
