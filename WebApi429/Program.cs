@@ -14,7 +14,7 @@ namespace WebApi429
             var app = builder.Build();
             var parameters = builder.Configuration.GetSection("Parameters").Get<Parameters>() ?? throw new ArgumentNullException("Parameters", "Parameters are required."); // Assumes that if the Parameters section exist, so do the individual properties. No need to go overboard here.
 
-            #region Sinmilar Endpoints
+            #region Similar Endpoints
             var Tracker = new List<Api429>(parameters.MaxEndpoints);
 
             for (int i = 0; i < parameters.MaxEndpoints; i++)
@@ -161,7 +161,7 @@ namespace WebApi429
                 response.Append("<ul>");
                 for (int i = 0; i < parameters.MaxEndpoints; i++)
                 {
-                    response.Append($"<li><a href=\"/api2/{i}\" target=\"_blank\">/api2/{i}</a></li>");
+                    response.Append($"<li style='margin-bottom:15px'><a href=\"/api2/{i}\" target=\"_blank\">/api2/{i}</a><br/>Max requests: {TrackerDifferent[i].MaxRequests}<br/>Retry after: {TrackerDifferent[i].RetryAfterSeconds}s</li>");
                 }
                 response.Append("</ul>");
 
