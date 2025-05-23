@@ -11,6 +11,10 @@ namespace WebApi429
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            // Register source-generated JSON context for minimal APIs
+            builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options => options.SerializerOptions.TypeInfoResolverChain.Add(MyJsonContext.Default));
+
             var app = builder.Build();
             var parameters = builder.Configuration.GetSection("Parameters").Get<Parameters>() ?? throw new ArgumentNullException("Parameters", "Parameters are required."); // Assumes that if the Parameters section exist, so do the individual properties. No need to go overboard here.
 
