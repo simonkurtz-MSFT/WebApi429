@@ -14,7 +14,7 @@ The Web API configures `MaxEndpoints` endpoints, starting at 0. For example, if 
 
 When an HTTP 429 response is returned, the `Retry-After` header is set to `RetryAfterSeconds`.
 
-The container image is hosted on [Docker Hub](https://hub.docker.com/r/simonkurtzmsft/mowebapi429).
+The container image is hosted on [Docker Hub](https://hub.docker.com/r/simonkurtzmsft/webapi429).
 
 ## Developing
 
