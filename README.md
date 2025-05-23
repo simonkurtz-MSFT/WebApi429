@@ -18,7 +18,7 @@ The container image is hosted on [Docker Hub](https://hub.docker.com/r/simonkurt
 
 ## Developing
 
-### Prerequisities
+### Prerequisites
 
 - [.NET 9 SDK](https://dotnet.microsoft.com/download)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop)
